@@ -36,8 +36,6 @@ public partial class PanelContainerPerfiles : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         _slotPerfil1 = GetNode<SlotPerfil>("VBoxContainer/ContainerPerfiles/SlotPerfil1");
         _slotPerfil1.NumeroSlot = 1;
         _slotPerfil2 = GetNode<SlotPerfil>("VBoxContainer/ContainerPerfiles/SlotPerfil2");
@@ -54,6 +52,10 @@ public partial class PanelContainerPerfiles : ContenedorMenu
         _buttonBorrar.Toggled += ButtonBorrarToggled;
 
         _containerBotones = GetNode<HBoxContainer>("VBoxContainer/ContainerBotones");
+
+        base._Ready();
+
+        LoggerJuego.Trace(this.Name + " Ready.");
     }
 
     private void ButtonBorrarToggled(bool toggled)

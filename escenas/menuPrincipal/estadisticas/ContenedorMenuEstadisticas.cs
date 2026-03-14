@@ -21,14 +21,14 @@ public partial class ContenedorMenuEstadisticas : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         _LabelPartidasJugadasValor = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelPartidasJugadasValor");
         _LabelMejorPuntuacionValor = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelMejorPuntuacionValor");
         _LabelMonedasRecogidasValor = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelMonedasRecogidasValor");
         _LabelMonedasEspecialesRecogidasValor = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelMonedasEspecialesRecogidasValor");
         _LabelEnemigosDerrotadosValor = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelEnemigosDerrotadosValor");
         _ButtonAtras = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonAtras");
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

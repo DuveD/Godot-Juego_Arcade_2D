@@ -31,8 +31,6 @@ public partial class ContenedorMenuPerfiles : CenterContainer
 
     public override void _Ready()
     {
-        base._Ready();
-
         Titulo = GetNode<Label>("PanelContainerPerfiles/VBoxContainer/Titulo");
         PanelContainerPerfiles = GetNode<PanelContainerPerfiles>("PanelContainerPerfiles");
         PanelNuevoPerfil = GetNode<PanelContainerNuevoPerfil>("PanelContainerNuevoPerfil");
@@ -42,11 +40,13 @@ public partial class ContenedorMenuPerfiles : CenterContainer
         PanelNuevoPerfil.OnButtonConfirmarPressed += OnCrearNuevoPerfil;
         PanelNuevoPerfil.OnButtonCancelarPressed += OnCancelarNuevoPerfil;
 
-        LoggerJuego.Trace(this.Name + " Ready.");
-
         // Inicializa UI
         InicializarSlots();
         ModoBorrarActivo(false);
+
+        base._Ready();
+
+        LoggerJuego.Trace(this.Name + " Ready.");
     }
 
     private async void InicializarSlots()

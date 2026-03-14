@@ -33,13 +33,13 @@ public partial class ContenedorConfirmacion : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         SetProcessUnhandledInput(true);
 
         LabelMensaje = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "MensajeConfirmacion");
         ButtonConfirmar = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonConfirmar");
         ButtonCancelar = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonCancelar");
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

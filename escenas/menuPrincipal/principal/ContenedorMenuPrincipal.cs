@@ -30,8 +30,6 @@ public partial class ContenedorMenuPrincipal : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         _ButtonEmpezarPartida = UtilidadesNodos.ObtenerNodoPorNombre<ButtonEmpezarPartida>(this, "ButtonEmpezarPartida");
         _ButtonEmpezarPartidaSinPerfil = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonEmpezarPartidaSinPerfil");
         _ButtonPerfil = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonPerfil");
@@ -45,6 +43,8 @@ public partial class ContenedorMenuPrincipal : ContenedorMenu
         Global.Instancia.OnCambioPerfilActivo += CalcularEstadosBotonesSinPerfil;
 
         CalcularEstadosBotonesSinPerfil();
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }
@@ -106,7 +106,7 @@ public partial class ContenedorMenuPrincipal : ContenedorMenu
 
     public override Control ObtenerPrimerElementoConFoco()
     {
-        return this.UltimoBotonPulsado ?? (_ButtonEmpezarPartida.Visible ? _ButtonEmpezarPartida : _ButtonEmpezarPartidaSinPerfil);
+        return (this.UltimoBotonPulsado != null && this.UltimoBotonPulsado.IsVisibleInTree()) ? this.UltimoBotonPulsado : (_ButtonEmpezarPartida.IsVisibleInTree() ? _ButtonEmpezarPartida : _ButtonEmpezarPartidaSinPerfil);
     }
 
     private void OnButtonEmpezarPartidaPressedAnimationEnd()

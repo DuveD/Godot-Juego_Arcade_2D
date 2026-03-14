@@ -40,8 +40,6 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 
 	public override void _Ready()
 	{
-		base._Ready();
-
 		_ControlVolumenGeneral = UtilidadesNodos.ObtenerNodoPorNombre<ControlSlider>(this, "ControlVolumenGeneral");
 		_ControlVolumenMusica = UtilidadesNodos.ObtenerNodoPorNombre<ControlSlider>(this, "ControlVolumenMusica");
 		_ControlVolumenSonido = UtilidadesNodos.ObtenerNodoPorNombre<ControlSlider>(this, "ControlVolumenSonido");
@@ -57,6 +55,8 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 
 		// Cargar ajustes actuales.
 		CargarValoresDeAjustes();
+
+		base._Ready();
 
 		LoggerJuego.Trace(this.Name + " Ready.");
 	}

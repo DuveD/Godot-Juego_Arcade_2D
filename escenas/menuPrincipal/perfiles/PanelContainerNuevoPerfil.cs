@@ -26,8 +26,6 @@ public partial class PanelContainerNuevoPerfil : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         _lineEdit = GetNode<LineEdit>("VBoxContainer/LineEdit");
         _lineEdit.TextChanged += OnLineEditTextChanged;
         _lineEdit.GuiInput += OnLineEditGuiInput;
@@ -40,6 +38,8 @@ public partial class PanelContainerNuevoPerfil : ContenedorMenu
         _buttonCancelar.Pressed += () => EmitSignal(SignalName.OnButtonCancelarPressed);
 
         this.VisibilityChanged += OnVisibilityChanged;
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

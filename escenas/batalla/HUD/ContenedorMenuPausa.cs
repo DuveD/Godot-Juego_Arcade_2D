@@ -16,11 +16,11 @@ public partial class ContenedorMenuPausa : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         ButtonRenaudar = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonRenaudar");
         ButtonAjustes = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonAjustes");
         ButtonSalir = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonSalir");
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

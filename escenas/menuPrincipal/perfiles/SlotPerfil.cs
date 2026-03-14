@@ -63,8 +63,6 @@ public partial class SlotPerfil : ButtonPersonalizado
 
     public override void _Ready()
     {
-        base._Ready();
-
         _labelNombre = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelNombre");
         _labelFechaUltimaPartidaFecha = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelFechaUltimaPartidaFecha");
         _labelPartidasJugadasNumero = UtilidadesNodos.ObtenerNodoPorNombre<Label>(this, "LabelPartidasJugadasNumero");
@@ -76,6 +74,8 @@ public partial class SlotPerfil : ButtonPersonalizado
         _estiloDesactivado = GetThemeStylebox("disabled");
 
         VaciarPerfil();
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

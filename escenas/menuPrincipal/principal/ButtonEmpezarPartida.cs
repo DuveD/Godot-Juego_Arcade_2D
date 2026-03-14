@@ -1,4 +1,5 @@
 using Godot;
+using Primerjuego2D.nucleo.utilidades.log;
 using ButtonPersonalizado = Primerjuego2D.escenas.ui.controles.ButtonPersonalizado;
 
 namespace Primerjuego2D.escenas.menuPrincipal.principal;
@@ -32,6 +33,8 @@ public partial class ButtonEmpezarPartida : ButtonPersonalizado
 		_pressedStyle = GetThemeStylebox("pressed")?.Duplicate() as StyleBox;
 
 		base._Ready();
+
+		LoggerJuego.Trace(this.Name + " Ready.");
 	}
 
 	private void StartBlink()

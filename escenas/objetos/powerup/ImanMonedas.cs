@@ -24,9 +24,9 @@ public partial class ImanMonedas : PowerUp
 
     public override void _Ready()
     {
-        LoggerJuego.Trace(this.Name + " Ready.");
-
         base._Ready();
+
+        LoggerJuego.Trace(this.Name + " Ready.");
     }
 
     public override void AplicarEfectoPowerUp(Jugador jugador)

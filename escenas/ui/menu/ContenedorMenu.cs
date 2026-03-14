@@ -42,6 +42,11 @@ public abstract partial class ContenedorMenu : Container
         ConfigurarElementosConFoco();
     }
 
+    public override void _ExitTree()
+    {
+        this.VisibilityChanged -= OnVisibilityChanged;
+    }
+
     // PostReady: se ejecuta tras layout inicial para evitar problemas de focus.
     protected virtual void PostReady()
     {
@@ -109,6 +114,13 @@ public abstract partial class ContenedorMenu : Container
         if (UltimoElementoConFoco == null || !IsInstanceValid(UltimoElementoConFoco))
         {
             LoggerJuego.Trace($"({this.Name}) Último elemento nulo. Seleccionamos el primer elemento.");
+            GrabFocusPrimerElemento();
+            return;
+        }
+
+        if (!UltimoElementoConFoco.IsVisibleInTree() || !UltimoElementoConFoco.Visible)
+        {
+            LoggerJuego.Trace($"({this.Name}) Último elemento con foco está no visible. Seleccionamos el primer elemento.");
             GrabFocusPrimerElemento();
             return;
         }
@@ -197,16 +209,17 @@ public abstract partial class ContenedorMenu : Container
         // if (@event is InputEventKey keyEvent && UtilidadesControles.IsActionPressed(keyEvent, ConstantesAcciones.ACCIONES_NAVEGACION_MENU))
         if (@event is InputEventKey keyEvent && keyEvent.Pressed)
         {
-            if (!UtilidadesControles.IsActionPressed(keyEvent, ConstantesAcciones.ESCAPE))
+            if (!Global.NavegacionTeclado)
             {
-                if (!Global.NavegacionTeclado)
-                {
-                    Global.NavegacionTeclado = true;
-                    OnNavegacionTecladoCambiado(Global.NavegacionTeclado);
+                Global.NavegacionTeclado = true;
+                OnNavegacionTecladoCambiado(Global.NavegacionTeclado);
 
-                    // Esto lo hacemos por si ya existe algún elemento con foco "especial" cómo un LineEdit, que puede tener foco aunque naveguemos con teclado.
-                    var focoActual = GetViewport().GuiGetFocusOwner();
-                    if (focoActual == null)
+                // Esto lo hacemos por si ya existe algún elemento con foco "especial" cómo un LineEdit, que puede tener foco aunque naveguemos con teclado.
+                var focoActual = GetViewport().GuiGetFocusOwner();
+                if (focoActual == null)
+                {
+                    // Filtramos escape para que el contenedor recoja la ación.
+                    if (!UtilidadesControles.IsActionPressed(keyEvent, ConstantesAcciones.ESCAPE))
                     {
                         GrabFocusUltimoElementoConFoco();
                         AcceptEvent();
@@ -239,7 +252,7 @@ public abstract partial class ContenedorMenu : Container
         Rect2 rectGlobal = focoActual.GetGlobalRect();
 
         // Si el click está fuera del rectángulo
-        if (!rectGlobal.HasPoint(inputEventMouse.Position))
+        if (!rectGlobal.HasPoint(inputEventMouse.GlobalPosition))
         {
             GetViewport().GuiReleaseFocus();
 
@@ -269,6 +282,8 @@ public abstract partial class ContenedorMenu : Container
         var elementosConFoco = ObtenerElementosConFoco();
         if (elementosConFoco == null)
             return;
+
+        GetViewport().GuiReleaseFocus();
 
         LoggerJuego.Trace($"({this.Name}) Desactivamos la navegación por teclado.");
 

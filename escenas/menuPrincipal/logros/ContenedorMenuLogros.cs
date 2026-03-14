@@ -26,11 +26,11 @@ public partial class ContenedorMenuLogros : ContenedorMenu
 
     public override void _Ready()
     {
-        base._Ready();
-
         _ScrollContainer = UtilidadesNodos.ObtenerNodoPorNombre<ScrollContainer>(this, "ScrollContainer");
         _VBoxContainerLogros = UtilidadesNodos.ObtenerNodoPorNombre<VBoxContainer>(this, "VBoxContainerLogros");
         _ButtonAtras = UtilidadesNodos.ObtenerNodoPorNombre<ButtonPersonalizado>(this, "ButtonAtras");
+
+        base._Ready();
 
         LoggerJuego.Trace(this.Name + " Ready.");
     }

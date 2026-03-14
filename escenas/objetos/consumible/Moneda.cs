@@ -29,15 +29,15 @@ public partial class Moneda : Consumible
 
 	public override void _Ready()
 	{
-		LoggerJuego.Trace(this.Name + " Ready.");
-
-		base._Ready();
-
 		this.AnimationPlayerRotacion = GetNode<AnimationPlayer>("AnimationPlayerRotacion");
 
 		UtilidadesNodos2D.AjustarZIndexNodo(this, ConstantesZIndex.OBJETOS);
 
 		this.AnimationPlayerRotacion.SpeedScale = this.VelocidadAnimacion;
+
+		base._Ready();
+
+		LoggerJuego.Trace(this.Name + " Ready.");
 	}
 
 	public override bool OnRecogida(Jugador jugador)
