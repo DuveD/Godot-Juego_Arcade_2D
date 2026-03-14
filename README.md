@@ -15,6 +15,10 @@ He ampliado el proyecto con características extra para aprender más sobre Godo
 
 ## ⚡ Características añadidas
 
+### v1.8.2
+
+- Corregido error con ContenedorMenu, inicialización de componentes y la acción de Escape.
+
 ### v1.8.1
 
 - Corregido comportamiento de la tecla scape en pantalla de perfiles en el modo borrar.

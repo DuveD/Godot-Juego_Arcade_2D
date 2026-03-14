@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Primer juego 2D"
-config/version="1.8.1.2026-02-25"
+config/version="1.8.2.2026-03-14"
 config/tags=PackedStringArray("2d")
 run/main_scene="res://escenas/Juego.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
