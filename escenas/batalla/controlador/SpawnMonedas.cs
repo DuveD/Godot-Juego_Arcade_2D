@@ -34,7 +34,8 @@ public partial class SpawnMonedas : Control
 
 	private PackedScene TextoFlotanteScene;
 
-	List<Moneda> MonedasEnEscena = new List<Moneda>();
+	// Grupo con las monedas creadas por este spawner.
+	private const string GRUPO_MONEDAS_SPAWNEADAS = "monedas_spawneadas";
 
 	public Node NodoContenedorMonedas => this.GetParent().GetParent();
 
@@ -58,7 +59,7 @@ public partial class SpawnMonedas : Control
 		// Moneda normal
 		SpawnMoneda();
 
-		bool existeMonedaEspecial = MonedasEnEscena.Any(m => m is MonedaEspecial);
+		bool existeMonedaEspecial = ObtenerMonedasSpawneadas().Any(m => m is MonedaEspecial);
 		if (!existeMonedaEspecial)
 		{
 			// Moneda especial según probabilidad
@@ -90,11 +91,10 @@ public partial class SpawnMonedas : Control
 
 		moneda.TextoFlotanteScene = this.TextoFlotanteScene;
 		moneda.Recogida += OnMonedaRecogida;
+		moneda.AddToGroup(GRUPO_MONEDAS_SPAWNEADAS);
 
 		moneda.Position = ObtenerPosicionAleatoriaSegura();
 		NodoContenedorMonedas.AddChild(moneda);
-
-		MonedasEnEscena.Add(moneda);
 
 		return moneda;
 	}
@@ -104,6 +104,8 @@ public partial class SpawnMonedas : Control
 		Vector2 nuevaPos;
 		Vector2 centroJugador = Jugador.GlobalPosition;
 		bool cercaJugador;
+
+		List<Moneda> monedasSpawneadas = ObtenerMonedasSpawneadas();
 		bool cercaOtraMoneda;
 
 		do
@@ -113,12 +115,20 @@ public partial class SpawnMonedas : Control
 			nuevaPos = new Vector2(x, y);
 
 			cercaJugador = UtilidadesMatematicas.PuntosCerca(centroJugador, nuevaPos, this.DistanciaMinima);
-			cercaOtraMoneda = MonedasEnEscena.FindAll(moneda => IsInstanceValid(moneda) && !moneda.IsQueuedForDeletion())
-																			 .Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
+			cercaOtraMoneda = monedasSpawneadas.Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
 		}
 		while (cercaJugador || cercaOtraMoneda);
 
 		return nuevaPos;
+	}
+
+	private List<Moneda> ObtenerMonedasSpawneadas()
+	{
+		// QueueFree no saca el nodo del árbol hasta el final del frame, así que descartamos las monedas ya marcadas para borrar.
+		return GetTree().GetNodesInGroup(GRUPO_MONEDAS_SPAWNEADAS)
+			.OfType<Moneda>()
+			.Where(moneda => !moneda.IsQueuedForDeletion())
+			.ToList();
 	}
 
 	public void OnMonedaRecogida(Moneda moneda)
@@ -127,8 +137,6 @@ public partial class SpawnMonedas : Control
 
 		// Emitimos la señal de que el jugador ha recogido una moneda.
 		EmitSignal(SignalName.MonedaRecogida, moneda);
-
-		MonedasEnEscena.Remove(moneda);
 
 		bool logrosDesbloqueados = GestorLogros.EmitirEvento(Global.PerfilActivo, DefinicionLogros.EVENTO_LOGRO_MONEDA_OBTENIDA);
 		if (logrosDesbloqueados)

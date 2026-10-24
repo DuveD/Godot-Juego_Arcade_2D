@@ -28,6 +28,8 @@ public static class LoggerJuego
 
     private static readonly string PathLog;
 
+    private static readonly object _bloqueoFichero = new();
+
     public static NivelLog NivelLogJuego { get; set; } = Ajustes.NivelLog;
 
     static LoggerJuego()
@@ -148,7 +150,11 @@ public static class LoggerJuego
         GD.PrintRich(mensajeColoreado);
 
         if (EscribirLogEnFichero)
-            File.AppendAllText(PathLog, mensajeLog + "\n"); // el archivo no tiene color
+        {
+            // Se puede loguear desde hilos de fondo (guardados); dos escrituras a la vez en el fichero fallarían.
+            lock (_bloqueoFichero)
+                File.AppendAllText(PathLog, mensajeLog + "\n"); // el archivo no tiene color
+        }
     }
 
     private static string FormatearMensajeLog(string level, string context, string message)

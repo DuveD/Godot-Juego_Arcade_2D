@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using Primerjuego2D.escenas.sistema;
@@ -35,6 +36,8 @@ public partial class Global : Node
     }
 
     public static Global Instancia;
+
+    private static readonly SemaphoreSlim _semaforoGuardado = new(1, 1);
 
     private GestorColor _gestorColor;
     public static GestorColor GestorColor => Global.Instancia._gestorColor;
@@ -133,14 +136,28 @@ public partial class Global : Node
 
     public static async void GuardarPerfilActivo()
     {
-        if (Global.PerfilActivo == null)
+        Perfil perfil = Global.PerfilActivo;
+        if (perfil == null)
             return;
+
+        // Copiamos los datos en el hilo principal: el hilo de fondo solo escribe esta copia,
+        // así no lee el perfil mientras el juego lo modifica.
+        ConfigFile archivoPerfil = GestorPerfiles.CrearArchivoPerfil(perfil);
 
         IndicadorGuardado.Mostrar();
 
         await Global.Instancia.ToSignal(Global.Instancia.GetTree(), SceneTree.SignalName.ProcessFrame);
 
-        await Task.Run(() => GestorPerfiles.GuardarPerfil(Global.PerfilActivo));
+        // Un guardado cada vez: dos escrituras a la vez usarían el mismo archivo temporal.
+        await _semaforoGuardado.WaitAsync();
+        try
+        {
+            await Task.Run(() => GestorPerfiles.GuardarArchivoPerfil(perfil.Id, archivoPerfil));
+        }
+        finally
+        {
+            _semaforoGuardado.Release();
+        }
 
         IndicadorGuardado.Esconder();
     }

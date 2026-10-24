@@ -14,19 +14,14 @@ public static class GestorLogros
 
     private const string SECCION_LOGROS = "logros";
 
-    private static Dictionary<string, List<Logro>> _logrosPorEvento = null;
-
-    public static void InicializarLogros(Perfil perfil, bool cargarCacheLogros = false)
+    public static void InicializarLogros(Perfil perfil)
     {
-        CargarLogros(perfil, null, cargarCacheLogros);
+        CargarLogros(perfil, null);
     }
 
-    public static void CargarLogros(Perfil perfil, ConfigFile archivoPerfil, bool cargarCacheLogros = false)
+    public static void CargarLogros(Perfil perfil, ConfigFile archivoPerfil)
     {
         List<Logro> logros = DefinicionLogros.ObtenerLogros().ToList();
-
-        if (cargarCacheLogros)
-            _logrosPorEvento = [];
 
         foreach (Logro logro in logros)
         {
@@ -39,27 +34,9 @@ public static class GestorLogros
                 InformarDatosLogro(logro, datosLogro);
 
             perfil.AnadirOActualizarLogro(logro);
-
-            if (cargarCacheLogros)
-                IndexarLogroEnCache(logro);
         }
 
         LoggerJuego.Trace($"Logros del perfil '{perfil.Id}' cargados.");
-    }
-
-    private static void IndexarLogroEnCache(Logro logro)
-    {
-        if (_logrosPorEvento == null)
-            return;
-
-        if (!_logrosPorEvento.TryGetValue(logro.Evento, out var lista))
-        {
-            lista = new List<Logro>();
-            _logrosPorEvento[logro.Evento] = lista;
-        }
-
-        if (!lista.Any(l => l.Id == logro.Id))
-            lista.Add(logro);
     }
 
     private static void InformarDatosLogro(Logro logro, Godot.Collections.Dictionary datosLogro)
@@ -80,16 +57,8 @@ public static class GestorLogros
 
         List<Logro> logrosDesbloqueados = [];
 
-        List<Logro> logrosEvento;
-        if (_logrosPorEvento != null)
-        {
-            if (!_logrosPorEvento.TryGetValue(evento, out logrosEvento))
-                return false;
-        }
-        else
-        {
-            logrosEvento = perfil.Logros.Where(l => l.Evento == evento).ToList();
-        }
+        // Los logros viven en el perfil recibido, así que el evento solo afecta a ese perfil.
+        List<Logro> logrosEvento = perfil.Logros.Where(l => l.Evento == evento).ToList();
 
         foreach (var logro in logrosEvento)
         {

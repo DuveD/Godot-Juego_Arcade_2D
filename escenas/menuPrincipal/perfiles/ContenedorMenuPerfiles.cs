@@ -198,13 +198,12 @@ public partial class ContenedorMenuPerfiles : CenterContainer
         Global.IndicadorGuardado.Mostrar();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 
-        await Task.Run(() =>
-        {
-            _perfiles[slotPerfil.NumeroSlot - 1] = null;
-            Ajustes.SetIdPerfil(slotPerfil.NumeroSlot, null);
+        // El estado compartido (lista de perfiles y ajustes) se modifica en el hilo principal;
+        // en segundo plano solo borramos el archivo.
+        _perfiles[slotPerfil.NumeroSlot - 1] = null;
+        Ajustes.SetIdPerfil(slotPerfil.NumeroSlot, null);
 
-            GestorPerfiles.EliminarPerfil(perfil);
-        });
+        await Task.Run(() => GestorPerfiles.EliminarPerfil(perfil));
 
         Global.IndicadorGuardado.Esconder();
 

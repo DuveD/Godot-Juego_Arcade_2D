@@ -32,10 +32,10 @@ public static class GestorPerfiles
       return;
 
     // Inicializamos los logros del perfil.
-    GestorLogros.InicializarLogros(perfil, true);
+    GestorLogros.InicializarLogros(perfil);
   }
 
-  public static Perfil CargarPerfil(string idPerfil, bool cargarCache = false)
+  public static Perfil CargarPerfil(string idPerfil)
   {
     if (!IdPerfilValido(idPerfil))
       return null;
@@ -51,7 +51,7 @@ public static class GestorPerfiles
     GestorEstadisticas.CargarGlobales(perfil, archivoPerfil);
 
     // Cargamos los logros del perfil.
-    GestorLogros.CargarLogros(perfil, archivoPerfil, cargarCache);
+    GestorLogros.CargarLogros(perfil, archivoPerfil);
 
     LoggerJuego.Trace($"Perfil '{perfil.Nombre}' ({perfil.Id}) cargado correctamente.");
 
@@ -96,6 +96,15 @@ public static class GestorPerfiles
     if (perfil == null)
       return;
 
+    GuardarArchivoPerfil(perfil.Id, CrearArchivoPerfil(perfil));
+  }
+
+  /// <summary>
+  /// Crea un archivo con una copia de los datos del perfil. Se debe llamar desde el hilo principal
+  /// para que el perfil no cambie mientras se copia; el archivo resultante se puede guardar en otro hilo.
+  /// </summary>
+  public static ConfigFile CrearArchivoPerfil(Perfil perfil)
+  {
     ConfigFile archivoPerfil = new();
 
     // Guardamos la informacion básica perfil.
@@ -107,7 +116,7 @@ public static class GestorPerfiles
     // Guardamos los logros del perfil.
     GestorLogros.GuardarLogros(perfil, archivoPerfil);
 
-    GuardarArchivoPerfil(perfil.Id, archivoPerfil);
+    return archivoPerfil;
   }
 
   private static void GuardarInformacionBasica(Perfil perfil, ConfigFile archivoPerfil)
@@ -149,7 +158,7 @@ public static class GestorPerfiles
     return archivoPerfil;
   }
 
-  private static bool GuardarArchivoPerfil(string idPerfil, ConfigFile archivoPerfil)
+  public static bool GuardarArchivoPerfil(string idPerfil, ConfigFile archivoPerfil)
   {
     if (!IdPerfilValido(idPerfil))
     {
