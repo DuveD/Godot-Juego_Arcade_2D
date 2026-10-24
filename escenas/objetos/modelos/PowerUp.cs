@@ -27,6 +27,8 @@ public abstract partial class PowerUp : Consumible
 
     public Timer TimerDuracionPowerUp;
 
+    private bool _anadidoAJugador = false;
+
     public virtual List<ModificadorAtributo<T>> ObtenerModificadoresAtributos<T>()
     {
         return [];
@@ -64,11 +66,14 @@ public abstract partial class PowerUp : Consumible
         // Ocultamos el Sprite del consumible.
         Sprite2D.SetDeferred(CanvasItem.PropertyName.Visible, false);
 
-        return false;
+        // Si este nodo pasa a ser el power-up activo del jugador, no se elimina; si solo ha
+        // renovado o acumulado sobre el que ya estaba activo, ya no sirve y se elimina.
+        return !_anadidoAJugador;
     }
 
     private void AnadirPowerUpAJugador(Jugador jugador)
     {
+        _anadidoAJugador = true;
         InicializarTimerDuracion(jugador);
         jugador.CallDeferred(nameof(Jugador.AnadirPowerUp), this);
         AplicarEfectoPowerUp(jugador);
@@ -95,7 +100,9 @@ public abstract partial class PowerUp : Consumible
         else
         {
             LoggerJuego.Info("PowerUp " + this.Name + " recogido: acumulando efecto.");
-            SumarTiempoTimer(this.TiempoDuracion);
+            // El tiempo se suma al power-up que ya está activo, no a este (que no tiene timer).
+            PowerUp powerUp = jugador.ObtenerPowerUp(this.GetType());
+            powerUp?.SumarTiempoTimer(this.TiempoDuracion);
         }
     }
 
@@ -130,9 +137,10 @@ public abstract partial class PowerUp : Consumible
         if (TimerDuracionPowerUp == null || !IsInstanceValid(TimerDuracionPowerUp))
             return;
 
+        // Sumamos al tiempo que queda, no a la duración total.
+        double tiempoRestante = this.TimerDuracionPowerUp.TimeLeft;
         this.TimerDuracionPowerUp.Stop();
-        this.TimerDuracionPowerUp.WaitTime += tiempo;
-        this.TimerDuracionPowerUp.Start();
+        this.TimerDuracionPowerUp.Start(tiempoRestante + tiempo);
     }
 
     public abstract void AplicarEfectoPowerUp(Jugador jugador);
