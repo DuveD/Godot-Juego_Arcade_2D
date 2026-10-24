@@ -187,10 +187,11 @@ public partial class GestorAudio : Node
 
 	private void CargarRecursosMusica()
 	{
-		var archivosMusica = DirAccess.Open(RUTA_MUSICA).GetFiles();
-		if (archivosMusica == null)
+		// ListDirectory devuelve los nombres originales también en el juego exportado (DirAccess solo vería los .import).
+		var archivosMusica = ResourceLoader.ListDirectory(RUTA_MUSICA);
+		if (archivosMusica == null || archivosMusica.Length == 0)
 		{
-			LoggerJuego.Error($"No se pudo abrir la carpeta: {RUTA_MUSICA}");
+			LoggerJuego.Error($"No se encontró música en la carpeta: {RUTA_MUSICA}");
 		}
 		else
 		{
@@ -212,10 +213,11 @@ public partial class GestorAudio : Node
 
 	private void CargarRecursosSonidos()
 	{
-		var archivosSonidos = DirAccess.Open(RUTA_SONIDOS).GetFiles();
-		if (archivosSonidos == null)
+		// ListDirectory devuelve los nombres originales también en el juego exportado (DirAccess solo vería los .import).
+		var archivosSonidos = ResourceLoader.ListDirectory(RUTA_SONIDOS);
+		if (archivosSonidos == null || archivosSonidos.Length == 0)
 		{
-			LoggerJuego.Error($"No se pudo abrir la carpeta: {RUTA_SONIDOS}");
+			LoggerJuego.Error($"No se encontraron sonidos en la carpeta: {RUTA_SONIDOS}");
 		}
 		else
 		{
