@@ -69,13 +69,14 @@ public static class GestorIdioma
     }
 
     /// <summary>
-    /// Devuelve el objeto Idioma correspondiente a un código.
+    /// Devuelve el objeto Idioma correspondiente a un código ("es", "ES", "es_ES"...),
+    /// o null si no es uno de los idiomas disponibles.
     /// </summary>
     public static Idioma ObtenerIdiomaDeCodigo(string codigoIdioma)
     {
-        if (string.IsNullOrEmpty(codigoIdioma))
-            codigoIdioma = IdiomaPorDefecto.Codigo;
+        // Normalizamos a código corto en minúsculas; si viene vacío, devuelve el del idioma por defecto.
+        string codigo = ObtenerCodigoIdiomaDeLocale(codigoIdioma);
 
-        return IdiomasDisponibles[codigoIdioma];
+        return IdiomasDisponibles.TryGetValue(codigo, out Idioma idioma) ? idioma : null;
     }
 }
