@@ -236,13 +236,8 @@ public static class UtilidadesNodos
 
         if (boton.ToggleMode)
         {
-            bool nuevoEstado = !boton.ButtonPressed;
-
-            // Cambiar estado
-            boton.ButtonPressed = nuevoEstado;
-
-            // Emitir señal con el nuevo estado
-            boton.EmitSignal(BaseButton.SignalName.Toggled, nuevoEstado);
+            // Cambiar ButtonPressed ya emite la señal Toggled con el nuevo estado.
+            boton.ButtonPressed = !boton.ButtonPressed;
         }
         else
         {

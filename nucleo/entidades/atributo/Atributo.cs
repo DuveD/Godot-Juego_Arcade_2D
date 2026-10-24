@@ -11,7 +11,16 @@ public class Atributo<T>
 
   internal bool ValorValido { get; set; } = true;
 
-  public T ValorBase { get; set; }
+  public T ValorBase
+  {
+    get;
+    set
+    {
+      field = value;
+      // Si cambia la base, el valor calculado con los modificadores deja de ser válido.
+      ValorValido = false;
+    }
+  }
 
   private T _cache;
 

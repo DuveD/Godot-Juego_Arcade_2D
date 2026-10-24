@@ -111,6 +111,9 @@ public partial class Jugador : CharacterBody2D
     {
         LoggerJuego.Trace(this.Name + " Ready.");
 
+        // Los valores del inspector se aplican después del constructor, así que la base se informa aquí.
+        this.Velocidad.ValorBase = this.VelocidadBase;
+
         this.CollisionShape2D = GetNode<CollisionShape2D>("HitBox/HitBoxCollisionShape2D");
         this.AnimatedSprite2D = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
         this.ExplosionMuerte = GetNode<CpuParticles2D>("ExplosionMuerte");

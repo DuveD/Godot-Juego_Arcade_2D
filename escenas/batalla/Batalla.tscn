@@ -121,7 +121,6 @@ position = Vector2(240, 450)
 [connection signal="PreparandoBatalla" from="BatallaControlador" to="BatallaHUD" method="MostrarMensajesIniciarBatalla"]
 [connection signal="PuntuacionActualizada" from="BatallaControlador" to="BatallaHUD" method="ActualizarPuntuacion"]
 [connection signal="RenaudarBatalla" from="BatallaControlador" to="BatallaHUD" method="MostrarHUD"]
-[connection signal="timeout" from="BatallaControlador/SpawnEnemigos/TimerSpawnEnemigo" to="." method="OnEnemyTimerTimeout"]
 [connection signal="MonedaRecogida" from="BatallaControlador/SpawnMonedas" to="BatallaControlador" method="SumarPuntuacion"]
 [connection signal="OnButtonSalirConfirmarPressed" from="BatallaHUD/PanelMenuPausa" to="." method="TerminarJuego"]
 [connection signal="pressed" from="BatallaHUD/PanelMenuPausa/ContenedorMenuPausa/VBoxContainer/PanelContainerMargin/PanelContainerContentSize/VBoxContainer/ButtonRenaudar" to="BatallaControlador" method="RenaudarJuego"]
