@@ -1,0 +1,21 @@
+# Configuración de formato compartida por los editores (VS Code, Visual Studio, Rider) y por `dotnet format`.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+
+[*.cs]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Llaves en su propia línea (estilo Allman, el habitual en C# y en Godot).
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Los using de System primero.
+dotnet_sort_system_directives_first = true

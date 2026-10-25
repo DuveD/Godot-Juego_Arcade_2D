@@ -12,163 +12,163 @@ namespace Primerjuego2D.escenas.batalla;
 
 public partial class SpawnMonedas : Control
 {
-	// Grupo con las monedas creadas por este spawner.
-	private const string GRUPO_MONEDAS_SPAWNEADAS = "monedas_spawneadas";
+    // Grupo con las monedas creadas por este spawner.
+    private const string GRUPO_MONEDAS_SPAWNEADAS = "monedas_spawneadas";
 
-	// Intentos máximos para encontrar una posición libre; así nunca se bloquea el juego si no queda hueco.
-	private const int MAX_INTENTOS_POSICION = 30;
-	
-	[Export]
-	public int ProbabilidadSpawnMonedaEspecial = 30;
+    // Intentos máximos para encontrar una posición libre; así nunca se bloquea el juego si no queda hueco.
+    private const int MAX_INTENTOS_POSICION = 30;
 
-	public int MonedasRecogidas;
+    [Export]
+    public int ProbabilidadSpawnMonedaEspecial = 30;
 
-	// Señal "MonedaRecogida" para indicar que el jugador ha recogido una moneda.
-	[Signal]
-	public delegate void MonedaRecogidaEventHandler(Moneda moneda);
+    public int MonedasRecogidas;
 
-	[Export]
-	public PackedScene MonedaPackedScene;
+    // Señal "MonedaRecogida" para indicar que el jugador ha recogido una moneda.
+    [Signal]
+    public delegate void MonedaRecogidaEventHandler(Moneda moneda);
 
-	[Export]
-	public PackedScene MonedaEspecialPackedScene;
+    [Export]
+    public PackedScene MonedaPackedScene;
 
-	[Export]
-	public int DistanciaMinima = 200;
+    [Export]
+    public PackedScene MonedaEspecialPackedScene;
 
-	private Jugador Jugador { get; set; }
+    [Export]
+    public int DistanciaMinima = 200;
 
-	private PackedScene TextoFlotanteScene;
+    private Jugador Jugador { get; set; }
 
-	public Node NodoContenedorMonedas => this.GetParent().GetParent();
+    private PackedScene TextoFlotanteScene;
 
-	public override void _Ready()
-	{
-		LoggerJuego.Trace(this.Name + " Ready.");
+    public Node NodoContenedorMonedas => this.GetParent().GetParent();
 
-		this.TextoFlotanteScene = GD.Load<PackedScene>(UtilidadesNodos.ObtenerRutaEscena<TextoFlotante>());
+    public override void _Ready()
+    {
+        LoggerJuego.Trace(this.Name + " Ready.");
 
-		this.MonedasRecogidas = 0;
-	}
+        this.TextoFlotanteScene = GD.Load<PackedScene>(UtilidadesNodos.ObtenerRutaEscena<TextoFlotante>());
 
-	public void IniciarSpawnLoop(Jugador jugador)
-	{
-		this.Jugador = jugador;
-		Spawn();
-	}
+        this.MonedasRecogidas = 0;
+    }
 
-	private void Spawn()
-	{
-		// Moneda normal
-		SpawnMoneda();
+    public void IniciarSpawnLoop(Jugador jugador)
+    {
+        this.Jugador = jugador;
+        Spawn();
+    }
 
-		bool existeMonedaEspecial = ObtenerMonedasSpawneadas().Any(m => m is MonedaEspecial);
-		if (!existeMonedaEspecial)
-		{
-			// Moneda especial según probabilidad
-			float prob = (float)ProbabilidadSpawnMonedaEspecial / 100;
-			if (Randomizador.GetRandomFloat() <= prob)
-			{
-				CallDeferred(nameof(SpawnMoneda), true);
-			}
-		}
-	}
+    private void Spawn()
+    {
+        // Moneda normal
+        SpawnMoneda();
 
-	private Moneda SpawnMoneda(bool monedaEspecial = false)
-	{
-		if (monedaEspecial)
-			LoggerJuego.Trace("Spawneamos una moneda especial.");
-		else
-			LoggerJuego.Trace("Spawneamos una moneda.");
+        bool existeMonedaEspecial = ObtenerMonedasSpawneadas().Any(m => m is MonedaEspecial);
+        if (!existeMonedaEspecial)
+        {
+            // Moneda especial según probabilidad
+            float prob = (float)ProbabilidadSpawnMonedaEspecial / 100;
+            if (Randomizador.GetRandomFloat() <= prob)
+            {
+                CallDeferred(nameof(SpawnMoneda), true);
+            }
+        }
+    }
 
-		Moneda moneda;
+    private Moneda SpawnMoneda(bool monedaEspecial = false)
+    {
+        if (monedaEspecial)
+            LoggerJuego.Trace("Spawneamos una moneda especial.");
+        else
+            LoggerJuego.Trace("Spawneamos una moneda.");
 
-		if (monedaEspecial)
-		{
-			moneda = MonedaEspecialPackedScene.Instantiate<MonedaEspecial>();
-		}
-		else
-		{
-			moneda = MonedaPackedScene.Instantiate<Moneda>();
-		}
+        Moneda moneda;
 
-		moneda.TextoFlotanteScene = this.TextoFlotanteScene;
-		moneda.Recogida += OnMonedaRecogida;
-		moneda.AddToGroup(GRUPO_MONEDAS_SPAWNEADAS);
+        if (monedaEspecial)
+        {
+            moneda = MonedaEspecialPackedScene.Instantiate<MonedaEspecial>();
+        }
+        else
+        {
+            moneda = MonedaPackedScene.Instantiate<Moneda>();
+        }
 
-		moneda.Position = ObtenerPosicionAleatoriaSegura();
-		NodoContenedorMonedas.AddChild(moneda);
+        moneda.TextoFlotanteScene = this.TextoFlotanteScene;
+        moneda.Recogida += OnMonedaRecogida;
+        moneda.AddToGroup(GRUPO_MONEDAS_SPAWNEADAS);
 
-		return moneda;
-	}
+        moneda.Position = ObtenerPosicionAleatoriaSegura();
+        NodoContenedorMonedas.AddChild(moneda);
 
-	private Vector2 ObtenerPosicionAleatoriaSegura()
-	{
-		Vector2 centroJugador = Jugador.GlobalPosition;
-		List<Moneda> monedasSpawneadas = ObtenerMonedasSpawneadas();
-		Rect2 areaSpawn = new(GlobalPosition, Size);
+        return moneda;
+    }
 
-		// Por si no encontramos ninguna posición libre: la más alejada del jugador de las probadas.
-		Vector2 posicionMasAlejada = areaSpawn.GetCenter();
-		float distanciaMasAlejada = -1;
+    private Vector2 ObtenerPosicionAleatoriaSegura()
+    {
+        Vector2 centroJugador = Jugador.GlobalPosition;
+        List<Moneda> monedasSpawneadas = ObtenerMonedasSpawneadas();
+        Rect2 areaSpawn = new(GlobalPosition, Size);
 
-		for (int intento = 0; intento < MAX_INTENTOS_POSICION; intento++)
-		{
-			Vector2 nuevaPos = Randomizador.ObtenerPosicionAleatoria(areaSpawn);
+        // Por si no encontramos ninguna posición libre: la más alejada del jugador de las probadas.
+        Vector2 posicionMasAlejada = areaSpawn.GetCenter();
+        float distanciaMasAlejada = -1;
 
-			bool cercaJugador = UtilidadesMatematicas.PuntosCerca(centroJugador, nuevaPos, this.DistanciaMinima);
-			bool cercaOtraMoneda = monedasSpawneadas.Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
+        for (int intento = 0; intento < MAX_INTENTOS_POSICION; intento++)
+        {
+            Vector2 nuevaPos = Randomizador.ObtenerPosicionAleatoria(areaSpawn);
 
-			if (!cercaJugador && !cercaOtraMoneda)
-				return nuevaPos;
+            bool cercaJugador = UtilidadesMatematicas.PuntosCerca(centroJugador, nuevaPos, this.DistanciaMinima);
+            bool cercaOtraMoneda = monedasSpawneadas.Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
 
-			float distanciaAlJugador = centroJugador.DistanceSquaredTo(nuevaPos);
-			if (distanciaAlJugador > distanciaMasAlejada)
-			{
-				distanciaMasAlejada = distanciaAlJugador;
-				posicionMasAlejada = nuevaPos;
-			}
-		}
+            if (!cercaJugador && !cercaOtraMoneda)
+                return nuevaPos;
 
-		// Si no hay hueco, la moneda se coloca igualmente lo más lejos posible del jugador:
-		// la siguiente moneda solo aparece al recoger esta, así que no colocarla cortaría la cadena.
-		LoggerJuego.Warn("No hay posición libre para la moneda; se usa la más alejada del jugador.");
+            float distanciaAlJugador = centroJugador.DistanceSquaredTo(nuevaPos);
+            if (distanciaAlJugador > distanciaMasAlejada)
+            {
+                distanciaMasAlejada = distanciaAlJugador;
+                posicionMasAlejada = nuevaPos;
+            }
+        }
 
-		return posicionMasAlejada;
-	}
+        // Si no hay hueco, la moneda se coloca igualmente lo más lejos posible del jugador:
+        // la siguiente moneda solo aparece al recoger esta, así que no colocarla cortaría la cadena.
+        LoggerJuego.Warn("No hay posición libre para la moneda; se usa la más alejada del jugador.");
 
-	private List<Moneda> ObtenerMonedasSpawneadas()
-	{
-		// QueueFree no saca el nodo del árbol hasta el final del frame, así que descartamos las monedas ya marcadas para borrar.
-		return GetTree().GetNodesInGroup(GRUPO_MONEDAS_SPAWNEADAS)
-			.OfType<Moneda>()
-			.Where(moneda => !moneda.IsQueuedForDeletion())
-			.ToList();
-	}
+        return posicionMasAlejada;
+    }
 
-	public void OnMonedaRecogida(Moneda moneda)
-	{
-		this.MonedasRecogidas += 1;
+    private List<Moneda> ObtenerMonedasSpawneadas()
+    {
+        // QueueFree no saca el nodo del árbol hasta el final del frame, así que descartamos las monedas ya marcadas para borrar.
+        return GetTree().GetNodesInGroup(GRUPO_MONEDAS_SPAWNEADAS)
+            .OfType<Moneda>()
+            .Where(moneda => !moneda.IsQueuedForDeletion())
+            .ToList();
+    }
 
-		// Emitimos la señal de que el jugador ha recogido una moneda.
-		EmitSignal(SignalName.MonedaRecogida, moneda);
+    public void OnMonedaRecogida(Moneda moneda)
+    {
+        this.MonedasRecogidas += 1;
 
-		bool logrosDesbloqueados = GestorLogros.EmitirEvento(Global.PerfilActivo, DefinicionLogros.EVENTO_LOGRO_MONEDA_OBTENIDA);
-		if (logrosDesbloqueados)
-			Global.GuardarPerfilActivo();
+        // Emitimos la señal de que el jugador ha recogido una moneda.
+        EmitSignal(SignalName.MonedaRecogida, moneda);
 
-		bool esMonedaEspecial = moneda is MonedaEspecial;
-		if (!esMonedaEspecial)
-			CallDeferred(nameof(Spawn));
-	}
+        bool logrosDesbloqueados = GestorLogros.EmitirEvento(Global.PerfilActivo, DefinicionLogros.EVENTO_LOGRO_MONEDA_OBTENIDA);
+        if (logrosDesbloqueados)
+            Global.GuardarPerfilActivo();
 
-	public void DestruirMonedas()
-	{
-		IEnumerable<Moneda> monedas = NodoContenedorMonedas.GetChildren().OfType<Moneda>();
-		foreach (var moneda in monedas)
-			moneda.QueueFree();
+        bool esMonedaEspecial = moneda is MonedaEspecial;
+        if (!esMonedaEspecial)
+            CallDeferred(nameof(Spawn));
+    }
 
-		if (monedas.Any())
-			LoggerJuego.Trace($"Destruida(s) {monedas.Count()} moneda(s).");
-	}
+    public void DestruirMonedas()
+    {
+        IEnumerable<Moneda> monedas = NodoContenedorMonedas.GetChildren().OfType<Moneda>();
+        foreach (var moneda in monedas)
+            moneda.QueueFree();
+
+        if (monedas.Any())
+            LoggerJuego.Trace($"Destruida(s) {monedas.Count()} moneda(s).");
+    }
 }

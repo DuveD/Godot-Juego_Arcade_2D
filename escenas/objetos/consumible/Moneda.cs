@@ -11,56 +11,56 @@ namespace Primerjuego2D.escenas.objetos.consumible;
 
 public partial class Moneda : Consumible
 {
-	[Signal]
-	public delegate void RecogidaEventHandler(Moneda moneda);
+    [Signal]
+    public delegate void RecogidaEventHandler(Moneda moneda);
 
-	[Export]
-	public int Valor { get; set; } = 1;
+    [Export]
+    public int Valor { get; set; } = 1;
 
-	[Export]
-	public float VelocidadAnimacion { get; set; } = 1.0f;
+    [Export]
+    public float VelocidadAnimacion { get; set; } = 1.0f;
 
-	[Export]
-	public Color ColorTextoFlotante { get; set; } = Colors.Gold;
+    [Export]
+    public Color ColorTextoFlotante { get; set; } = Colors.Gold;
 
-	public PackedScene TextoFlotanteScene;
+    public PackedScene TextoFlotanteScene;
 
-	public AnimationPlayer AnimationPlayerRotacion;
+    public AnimationPlayer AnimationPlayerRotacion;
 
-	public override void _Ready()
-	{
-		this.AnimationPlayerRotacion = GetNode<AnimationPlayer>("AnimationPlayerRotacion");
+    public override void _Ready()
+    {
+        this.AnimationPlayerRotacion = GetNode<AnimationPlayer>("AnimationPlayerRotacion");
 
-		UtilidadesNodos2D.AjustarZIndexNodo(this, ConstantesZIndex.OBJETOS);
+        UtilidadesNodos2D.AjustarZIndexNodo(this, ConstantesZIndex.OBJETOS);
 
-		this.AnimationPlayerRotacion.SpeedScale = this.VelocidadAnimacion;
+        this.AnimationPlayerRotacion.SpeedScale = this.VelocidadAnimacion;
 
-		base._Ready();
+        base._Ready();
 
-		LoggerJuego.Trace(this.Name + " Ready.");
-	}
+        LoggerJuego.Trace(this.Name + " Ready.");
+    }
 
-	public override bool OnRecogida(Jugador jugador)
-	{
-		LoggerJuego.Info("Moneda (" + this.Valor + ") recogida.");
+    public override bool OnRecogida(Jugador jugador)
+    {
+        LoggerJuego.Info("Moneda (" + this.Valor + ") recogida.");
 
-		EmitSignal(SignalName.Recogida, this);
+        EmitSignal(SignalName.Recogida, this);
 
-		Global.GestorAudio.ReproducirSonido("retro_coin.mp3");
+        Global.GestorAudio.ReproducirSonido("retro_coin.mp3");
 
-		MostrarTextoFlotante();
+        MostrarTextoFlotante();
 
-		return true;
-	}
+        return true;
+    }
 
-	public virtual void MostrarTextoFlotante()
-	{
-		var texto = TextoFlotanteScene.Instantiate<TextoFlotante>();
+    public virtual void MostrarTextoFlotante()
+    {
+        var texto = TextoFlotanteScene.Instantiate<TextoFlotante>();
 
-		texto.Texto = " +" + this.Valor.ToString();
-		texto.Color = ColorTextoFlotante;
-		texto.PosicionGlobal = GlobalPosition;
+        texto.Texto = " +" + this.Valor.ToString();
+        texto.Color = ColorTextoFlotante;
+        texto.PosicionGlobal = GlobalPosition;
 
-		GetTree().CurrentScene.AddChild(texto);
-	}
+        GetTree().CurrentScene.AddChild(texto);
+    }
 }
