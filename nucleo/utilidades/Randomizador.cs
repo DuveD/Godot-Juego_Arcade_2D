@@ -36,6 +36,17 @@ public static class Randomizador
         return (float)GlobalRandom.NextDouble();
     }
 
+    /// <summary>
+    /// Devuelve una posición aleatoria dentro del área indicada.
+    /// </summary>
+    public static Vector2 ObtenerPosicionAleatoria(Rect2 area)
+    {
+        float x = (float)GetRandomDouble(area.Position.X, area.End.X);
+        float y = (float)GetRandomDouble(area.Position.Y, area.End.Y);
+
+        return new Vector2(x, y);
+    }
+
     // ---- MÉTODOS GODOT ----
 
     /// <summary>

@@ -12,6 +12,12 @@ namespace Primerjuego2D.escenas.batalla;
 
 public partial class SpawnMonedas : Control
 {
+	// Grupo con las monedas creadas por este spawner.
+	private const string GRUPO_MONEDAS_SPAWNEADAS = "monedas_spawneadas";
+
+	// Intentos máximos para encontrar una posición libre; así nunca se bloquea el juego si no queda hueco.
+	private const int MAX_INTENTOS_POSICION = 30;
+	
 	[Export]
 	public int ProbabilidadSpawnMonedaEspecial = 30;
 
@@ -33,9 +39,6 @@ public partial class SpawnMonedas : Control
 	private Jugador Jugador { get; set; }
 
 	private PackedScene TextoFlotanteScene;
-
-	// Grupo con las monedas creadas por este spawner.
-	private const string GRUPO_MONEDAS_SPAWNEADAS = "monedas_spawneadas";
 
 	public Node NodoContenedorMonedas => this.GetParent().GetParent();
 
@@ -101,25 +104,37 @@ public partial class SpawnMonedas : Control
 
 	private Vector2 ObtenerPosicionAleatoriaSegura()
 	{
-		Vector2 nuevaPos;
 		Vector2 centroJugador = Jugador.GlobalPosition;
-		bool cercaJugador;
-
 		List<Moneda> monedasSpawneadas = ObtenerMonedasSpawneadas();
-		bool cercaOtraMoneda;
+		Rect2 areaSpawn = new(GlobalPosition, Size);
 
-		do
+		// Por si no encontramos ninguna posición libre: la más alejada del jugador de las probadas.
+		Vector2 posicionMasAlejada = areaSpawn.GetCenter();
+		float distanciaMasAlejada = -1;
+
+		for (int intento = 0; intento < MAX_INTENTOS_POSICION; intento++)
 		{
-			float x = (float)Randomizador.GetRandomDouble(GlobalPosition.X, GlobalPosition.X + Size.X);
-			float y = (float)Randomizador.GetRandomDouble(GlobalPosition.Y, GlobalPosition.Y + Size.Y);
-			nuevaPos = new Vector2(x, y);
+			Vector2 nuevaPos = Randomizador.ObtenerPosicionAleatoria(areaSpawn);
 
-			cercaJugador = UtilidadesMatematicas.PuntosCerca(centroJugador, nuevaPos, this.DistanciaMinima);
-			cercaOtraMoneda = monedasSpawneadas.Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
+			bool cercaJugador = UtilidadesMatematicas.PuntosCerca(centroJugador, nuevaPos, this.DistanciaMinima);
+			bool cercaOtraMoneda = monedasSpawneadas.Any(moneda => UtilidadesMatematicas.PuntosCerca(moneda.Position, nuevaPos, moneda.ObtenerRadioCollisionShape2D() * 2));
+
+			if (!cercaJugador && !cercaOtraMoneda)
+				return nuevaPos;
+
+			float distanciaAlJugador = centroJugador.DistanceSquaredTo(nuevaPos);
+			if (distanciaAlJugador > distanciaMasAlejada)
+			{
+				distanciaMasAlejada = distanciaAlJugador;
+				posicionMasAlejada = nuevaPos;
+			}
 		}
-		while (cercaJugador || cercaOtraMoneda);
 
-		return nuevaPos;
+		// Si no hay hueco, la moneda se coloca igualmente lo más lejos posible del jugador:
+		// la siguiente moneda solo aparece al recoger esta, así que no colocarla cortaría la cadena.
+		LoggerJuego.Warn("No hay posición libre para la moneda; se usa la más alejada del jugador.");
+
+		return posicionMasAlejada;
 	}
 
 	private List<Moneda> ObtenerMonedasSpawneadas()
