@@ -38,6 +38,9 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 	public bool VerColisiones;
 	#endregion
 
+	// Los cambios se aplican al momento pero se escriben en disco una sola vez, al cerrar el menú.
+	private bool _hayCambiosSinGuardar = false;
+
 	public override void _Ready()
 	{
 		_ControlVolumenGeneral = UtilidadesNodos.ObtenerNodoPorNombre<ControlSlider>(this, "ControlVolumenGeneral");
@@ -101,6 +104,8 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		_ControlVolumenSonido.ValorCambiado -= OnControlVolumenSonidosValorCambiado;
 		_ControlLenguaje.ValorCambiado -= OnControlLenguajeValorCambiado;
 		_ControlNivelLog.ValorCambiado -= OnControlNivelLogValorCambiado;
+		_ControlEscribirLogEnFichero.ValorCambiado -= OnControlEscribirLogEnFicheroValorCambiado;
+		_ControlVerColisiones.ValorCambiado -= OnControlVerColisionesValorCambiado;
 
 		VolumenGeneral = Ajustes.VolumenGeneral;
 		_ControlVolumenGeneral.Valor = VolumenGeneral;
@@ -200,7 +205,7 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		Global.GestorAudio.VolumenGeneral = (float)(valor / 100.0f);
 		//ActivarBotonGuardarSiCambio();
 
-		Ajustes.VolumenGeneral = (int)valor;
+		CambiarAjusteSinGuardar(() => Ajustes.VolumenGeneral = (int)valor);
 	}
 
 	private void OnControlVolumenMusicaValorCambiado(double valor)
@@ -208,7 +213,7 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		Global.GestorAudio.VolumenMusica = (float)(valor / 100.0f);
 		//ActivarBotonGuardarSiCambio();
 
-		Ajustes.VolumenMusica = (int)valor;
+		CambiarAjusteSinGuardar(() => Ajustes.VolumenMusica = (int)valor);
 	}
 
 	private void OnControlVolumenSonidosValorCambiado(double valor)
@@ -216,7 +221,7 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		Global.GestorAudio.VolumenSonidos = (float)(valor / 100.0f);
 		//ActivarBotonGuardarSiCambio();
 
-		Ajustes.VolumenSonidos = (int)valor;
+		CambiarAjusteSinGuardar(() => Ajustes.VolumenSonidos = (int)valor);
 	}
 
 	private void OnControlLenguajeValorCambiado(Variant valor)
@@ -226,7 +231,7 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		GestorIdioma.CambiarIdioma(idiomaSeleccionado);
 		//ActivarBotonGuardarSiCambio();
 
-		Ajustes.Idioma = idiomaSeleccionado;
+		CambiarAjusteSinGuardar(() => Ajustes.Idioma = idiomaSeleccionado);
 	}
 
 	private void OnControlNivelLogValorCambiado(Variant valor)
@@ -235,19 +240,65 @@ public partial class ContenedorMenuAjustes : ContenedorMenu
 		LoggerJuego.NivelLogJuego = nivelLogSeleccionado;
 		//ActivarBotonGuardarSiCambio();
 
-		Ajustes.NivelLog = nivelLogSeleccionado;
+		CambiarAjusteSinGuardar(() => Ajustes.NivelLog = nivelLogSeleccionado);
 	}
 
 	private void OnControlEscribirLogEnFicheroValorCambiado(bool valor)
 	{
-		Ajustes.EscribirLogEnFichero = valor;
+		LoggerJuego.EscribirLogEnFichero = valor;
+
+		CambiarAjusteSinGuardar(() => Ajustes.EscribirLogEnFichero = valor);
 	}
 
 	private void OnControlVerColisionesValorCambiado(bool valor)
 	{
-		Ajustes.VerColisiones = valor;
+		CambiarAjusteSinGuardar(() => Ajustes.VerColisiones = valor);
 
 		GetTree().DebugCollisionsHint = valor;
+	}
+
+	private void CambiarAjusteSinGuardar(Action cambiarAjuste)
+	{
+		Ajustes.CambiarSinGuardar(cambiarAjuste);
+		_hayCambiosSinGuardar = true;
+	}
+
+	private async void GuardarCambiosPendientesConIndicador()
+	{
+		if (!_hayCambiosSinGuardar)
+			return;
+
+		_hayCambiosSinGuardar = false;
+
+		Global.IndicadorGuardado.Mostrar();
+
+		// Esperamos un frame para que el indicador se dibuje antes de escribir en disco.
+		// Usamos Global porque este menú puede liberarse antes (por ejemplo, al empezar partida).
+		await Global.Instancia.ToSignal(Global.Instancia.GetTree(), SceneTree.SignalName.ProcessFrame);
+
+		Ajustes.Guardar();
+
+		Global.IndicadorGuardado.Esconder();
+	}
+
+	public override void OnMenuInvisible()
+	{
+		base.OnMenuInvisible();
+
+		GuardarCambiosPendientesConIndicador();
+	}
+
+	public override void _ExitTree()
+	{
+		base._ExitTree();
+
+		// Por si el menú desaparece estando abierto (por ejemplo, al cerrar el juego).
+		// Aquí se guarda directamente: puede que ya no haya más frames para mostrar el indicador.
+		if (_hayCambiosSinGuardar)
+		{
+			Ajustes.Guardar();
+			_hayCambiosSinGuardar = false;
+		}
 	}
 
 	public void OnButtonGuardarPressed()

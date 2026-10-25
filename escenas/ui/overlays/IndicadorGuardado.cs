@@ -71,6 +71,10 @@ public partial class IndicadorGuardado : CanvasLayer
 			if (tiempoRestante > 0)
 				await ToSignal(GetTree().CreateTimer(tiempoRestante), "timeout");
 
+			// Si durante la espera ha empezado otro guardado, lo dejamos visible.
+			if (_numeroCargas > 0)
+				return;
+
 			EsconderInmediato();
 		}
 	}

@@ -125,13 +125,23 @@ public partial class Global : Node
         IndicadorCarga.Esconder();
     }
 
-    public static void CambiarPerfilActivo(Perfil perfil)
+    public static async void CambiarPerfilActivo(Perfil perfil)
     {
         Global.Instancia._perfilActivo = perfil;
 
-        Ajustes.IdPerfilActivo = perfil?.Id;
+        // El id se cambia en memoria al momento, porque los menús lo leen enseguida;
+        // la escritura en disco se hace con el indicador de guardado ya visible.
+        Ajustes.CambiarSinGuardar(() => Ajustes.IdPerfilActivo = perfil?.Id);
 
         Global.Instancia.EmitSignal(SignalName.OnCambioPerfilActivo);
+
+        IndicadorGuardado.Mostrar();
+
+        await Global.Instancia.ToSignal(Global.Instancia.GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Ajustes.Guardar();
+
+        IndicadorGuardado.Esconder();
     }
 
     public static async void GuardarPerfilActivo()

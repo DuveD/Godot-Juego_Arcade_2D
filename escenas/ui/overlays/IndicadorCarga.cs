@@ -56,6 +56,10 @@ public partial class IndicadorCarga : CanvasLayer
 				await ToSignal(GetTree().CreateTimer(tiempoRestante), "timeout");
 			}
 
+			// Si durante la espera ha empezado otra carga, lo dejamos visible.
+			if (_numeroCargas > 0)
+				return;
+
 			EsconderInmediato();
 		}
 	}

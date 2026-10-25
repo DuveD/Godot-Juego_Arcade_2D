@@ -239,6 +239,22 @@ public static class Ajustes
         LoggerJuego.Info("Archivo de ajustes migrado a la versión 2.");
     }
 
+    /// <summary>
+    /// Aplica cambios de ajustes solo en memoria, sin escribir en disco. Después hay que llamar a Guardar().
+    /// </summary>
+    public static void CambiarSinGuardar(Action cambios)
+    {
+        GuardarAjustesAlGuardarPropiedad = false;
+        try
+        {
+            cambios();
+        }
+        finally
+        {
+            GuardarAjustesAlGuardarPropiedad = true;
+        }
+    }
+
     public static void GuardarValor(string seccion, string clave, Variant valor)
     {
         ArchivoAjustes.SetValue(seccion, clave, valor);
