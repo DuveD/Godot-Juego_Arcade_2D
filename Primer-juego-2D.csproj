@@ -3,6 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Primerjuego2D</RootNamespace>
-    <WarningsAsErrors>nullable;IDE0010;IDE0072</WarningsAsErrors>
+    <!-- Aplica al compilar las reglas de estilo (IDExxxx) configuradas en .editorconfig. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <WarningsAsErrors>IDE0010;IDE0072</WarningsAsErrors>
   </PropertyGroup>
 </Project>
