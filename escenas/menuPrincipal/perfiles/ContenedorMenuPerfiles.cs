@@ -167,7 +167,7 @@ public partial class ContenedorMenuPerfiles : CenterContainer
         Perfil nuevoPerfil = await Task.Run(() =>
         {
             string idPerfil = GestorPerfiles.GenerarIdPerfil();
-            Perfil nuevoPerfil = new(idPerfil, nombrePerfil, DateTime.Now, null);
+            Perfil nuevoPerfil = new(idPerfil, nombrePerfil, DateTime.UtcNow, null);
             GestorPerfiles.InicializarPerfil(nuevoPerfil);
             GestorPerfiles.GuardarPerfil(nuevoPerfil);
 

@@ -10,7 +10,8 @@ namespace Primerjuego2D.nucleo.sistema.logros;
 
 public static class GestorLogros
 {
-    public const string FORMATO_FECHA = "yyyy-MM-dd HH:mm:ss";
+    // Formato de fecha de la versión 1 del perfil (texto en hora local). Solo se usa para migrar.
+    private const string FORMATO_FECHA_VERSION_1 = "yyyy-MM-dd HH:mm:ss";
 
     private const string SECCION_LOGROS = "logros";
 
@@ -43,8 +44,8 @@ public static class GestorLogros
     {
         logro.Desbloqueado = (bool)datosLogro.GetValueOrDefault("desbloqueado", false);
 
-        string fechaDesbloqueadoStr = (string)datosLogro.GetValueOrDefault("fecha_desbloqueado", (string)null);
-        logro.FechaDesbloqueado = fechaDesbloqueadoStr.StringToDateTime(FORMATO_FECHA);
+        string fechaDesbloqueadoTexto = (string)datosLogro.GetValueOrDefault("fecha_desbloqueado", "");
+        logro.FechaDesbloqueado = fechaDesbloqueadoTexto.DesdeTextoIso8601();
 
         if (logro is LogroContador logroContador)
             logroContador.Progreso = (int)datosLogro.GetValueOrDefault("progreso", 0);
@@ -94,12 +95,34 @@ public static class GestorLogros
 
         datosLogro.Add("desbloqueado", logro.Desbloqueado);
 
-        string fechaDesbloqueadoStr = logro.FechaDesbloqueado.DateTimeToString(FORMATO_FECHA);
-        datosLogro.Add("fecha_desbloqueado", fechaDesbloqueadoStr);
+        datosLogro.Add("fecha_desbloqueado", logro.FechaDesbloqueado.ATextoIso8601Utc() ?? "");
 
         if (logro is LogroContador logroContador)
             datosLogro.Add("progreso", logroContador.Progreso);
 
         archivoPerfil.SetValue(SECCION_LOGROS, logro.Id, datosLogro);
+    }
+
+    /// <summary>
+    /// Migración del perfil a la versión 2: las fechas de desbloqueo pasan de texto en hora local a ISO 8601 en UTC.
+    /// </summary>
+    internal static void MigrarFechasAVersion2(ConfigFile archivoPerfil)
+    {
+        if (!archivoPerfil.HasSection(SECCION_LOGROS))
+            return;
+
+        foreach (string idLogro in archivoPerfil.GetSectionKeys(SECCION_LOGROS))
+        {
+            var datosLogro = (Godot.Collections.Dictionary)archivoPerfil.GetValue(SECCION_LOGROS, idLogro);
+
+            string fechaVersion1 = (string)datosLogro.GetValueOrDefault("fecha_desbloqueado", "");
+            DateTime? fecha = fechaVersion1.StringToDateTime(FORMATO_FECHA_VERSION_1);
+
+            // La fecha antigua estaba en hora local, sin indicar zona horaria.
+            DateTime? fechaLocal = fecha.HasValue ? DateTime.SpecifyKind(fecha.Value, DateTimeKind.Local) : null;
+            datosLogro["fecha_desbloqueado"] = fechaLocal.ATextoIso8601Utc() ?? "";
+
+            archivoPerfil.SetValue(SECCION_LOGROS, idLogro, datosLogro);
+        }
     }
 }

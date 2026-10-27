@@ -23,7 +23,7 @@ public abstract class Logro(string id, string nombre, string descripcion, string
         if (Desbloqueado) return;
 
         Desbloqueado = true;
-        FechaDesbloqueado = DateTime.Now;
+        FechaDesbloqueado = DateTime.UtcNow;
 
         LoggerJuego.Info($"Logro desbloqueado: {Id}");
     }

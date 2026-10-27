@@ -141,7 +141,7 @@ public partial class BatallaControlador : Control
 
         GestorEstadisticas.PartidaActual.RegistrarPuntuacion(this.Puntuacion);
         GestorEstadisticas.FinalizarPartida(Global.PerfilActivo);
-        Global.PerfilActivo.FechaUltimaPartida = DateTime.Now;
+        Global.PerfilActivo.FechaUltimaPartida = DateTime.UtcNow;
 
         // Procesamos los logros antes de guardar para que un único guardado incluya todo.
         GestorLogros.EmitirEvento(Global.PerfilActivo, DefinicionLogros.EVENTO_LOGRO_PRIMERA_PARTIDA);

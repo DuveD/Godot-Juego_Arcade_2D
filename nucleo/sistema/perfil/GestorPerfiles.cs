@@ -4,13 +4,14 @@ using Godot;
 using Primerjuego2D.nucleo.sistema.configuracion;
 using Primerjuego2D.nucleo.sistema.estadisticas;
 using Primerjuego2D.nucleo.sistema.logros;
+using Primerjuego2D.nucleo.utilidades;
 using Primerjuego2D.nucleo.utilidades.log;
 
 namespace Primerjuego2D.nucleo.sistema.perfil;
 
 public static class GestorPerfiles
 {
-    private const int VERSION_PERFIL = 1;
+    private const int VERSION_PERFIL = 2;
 
     private const string SECCION_DATOS_PERFIL = "datos_perfil";
 
@@ -43,6 +44,12 @@ public static class GestorPerfiles
         if (archivoPerfil == null)
             return null;
 
+        // Si el archivo es de una versión anterior, lo actualizamos antes de leer nada:
+        // así el resto del código solo tiene que entender el formato actual.
+        int version = (int)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "version", 1);
+        if (version < VERSION_PERFIL)
+            MigrarArchivoPerfil(version, archivoPerfil);
+
         // Cargamos la informacion básica perfil.
         Perfil perfil = CargarInformacionBasica(idPerfil, archivoPerfil);
 
@@ -59,17 +66,13 @@ public static class GestorPerfiles
 
     private static Perfil CargarInformacionBasica(string idPerfil, ConfigFile archivoPerfil)
     {
-        int version = (int)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "version", 1);
-        if (version < VERSION_PERFIL)
-            MigrarArchivoPerfil(version, archivoPerfil);
-
         string nombre = (string)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "nombre", "");
 
-        long fechaCreacionTicks = (long)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_creacion", DateTime.Now.Ticks);
-        DateTime fechaCreacion = new(fechaCreacionTicks);
+        string fechaCreacionTexto = (string)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_creacion", "");
+        DateTime fechaCreacion = fechaCreacionTexto.DesdeTextoIso8601() ?? DateTime.UtcNow;
 
-        long fechaUltimaPartidaTicks = (long)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", -1);
-        DateTime? fechaUltimaPartida = (fechaUltimaPartidaTicks > 0) ? new(fechaUltimaPartidaTicks) : null;
+        string fechaUltimaPartidaTexto = (string)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", "");
+        DateTime? fechaUltimaPartida = fechaUltimaPartidaTexto.DesdeTextoIso8601();
 
         Perfil perfil = new(idPerfil, nombre, fechaCreacion, fechaUltimaPartida);
         return perfil;
@@ -81,13 +84,30 @@ public static class GestorPerfiles
             MigrarArchivoPerfilVersion2(archivoPerfil);
     }
 
+    /// <summary>
+    /// Versión 2: las fechas pasan de Ticks en hora local a texto ISO 8601 en UTC.
+    /// </summary>
     private static void MigrarArchivoPerfilVersion2(ConfigFile archivoPerfil)
     {
         archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "version", 2);
 
-        // Añadir los nuevos valores aquí.
+        long ticksCreacion = (long)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_creacion", DateTime.Now.Ticks);
+        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_creacion", TicksLocalesATextoIso8601(ticksCreacion));
+
+        // En la versión 1, -1 significaba "sin partidas".
+        long ticksUltimaPartida = (long)archivoPerfil.GetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", -1L);
+        string ultimaPartida = ticksUltimaPartida > 0 ? TicksLocalesATextoIso8601(ticksUltimaPartida) : "";
+        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", ultimaPartida);
+
+        GestorLogros.MigrarFechasAVersion2(archivoPerfil);
 
         LoggerJuego.Info("Archivo de perfil migrado a la versión 2.");
+    }
+
+    private static string TicksLocalesATextoIso8601(long ticks)
+    {
+        DateTime? fechaLocal = new DateTime(ticks, DateTimeKind.Local);
+        return fechaLocal.ATextoIso8601Utc();
     }
 
     public static void GuardarPerfil(Perfil perfil)
@@ -124,10 +144,11 @@ public static class GestorPerfiles
 
         archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "nombre", perfil.Nombre);
 
-        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_creacion", perfil.FechaCreacion.Ticks);
+        DateTime? fechaCreacion = perfil.FechaCreacion;
+        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_creacion", fechaCreacion.ATextoIso8601Utc());
 
-        long fechaUltimaPartidaTicks = perfil.FechaUltimaPartida?.Ticks ?? -1L;
-        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", fechaUltimaPartidaTicks);
+        // Sin partidas se guarda vacío (ConfigFile borra la clave si se le pasa null).
+        archivoPerfil.SetValue(SECCION_DATOS_PERFIL, "fecha_ultima_partida", perfil.FechaUltimaPartida.ATextoIso8601Utc() ?? "");
     }
 
     private static ConfigFile CargarArchivoPerfil(string idPerfil)
