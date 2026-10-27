@@ -1,6 +1,5 @@
 
 using System;
-using System.IO;
 using Godot;
 using Primerjuego2D.nucleo.sistema.configuracion;
 using Primerjuego2D.nucleo.sistema.estadisticas;
@@ -23,7 +22,7 @@ public static class GestorPerfiles
     private static bool IdPerfilValido(string idPerfil)
     {
         return !string.IsNullOrWhiteSpace(idPerfil)
-            && idPerfil.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+            && idPerfil.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) < 0;
     }
 
     public static void InicializarPerfil(Perfil perfil)
@@ -139,8 +138,8 @@ public static class GestorPerfiles
             return null;
         }
 
-        string rutaArchivoPerfil = Path.Combine(Ajustes.RutaPerfiles, idPerfil + ".save");
-        if (!File.Exists(rutaArchivoPerfil))
+        string rutaArchivoPerfil = ObtenerRutaArchivoPerfil(idPerfil);
+        if (!FileAccess.FileExists(rutaArchivoPerfil))
         {
             LoggerJuego.Warn($"No se ha encontrado el archivo del perfil '{idPerfil}'.");
             return null;
@@ -166,13 +165,14 @@ public static class GestorPerfiles
             return false;
         }
 
-        string rutaArchivoPerfil = Path.Combine(Ajustes.RutaPerfiles, idPerfil);
-        string rutaArchivoPerfilTemporal = rutaArchivoPerfil + ".tmp";
-        string rutaArchivoPerfilSave = rutaArchivoPerfil + ".save";
+        string rutaArchivoPerfilSave = ObtenerRutaArchivoPerfil(idPerfil);
+        string rutaArchivoPerfilTemporal = rutaArchivoPerfilSave + ".tmp";
 
-        if (!Directory.Exists(Ajustes.RutaPerfiles))
-            Directory.CreateDirectory(Ajustes.RutaPerfiles);
+        // Crea la carpeta si no existe (si ya existe, no hace nada).
+        DirAccess.MakeDirRecursiveAbsolute(Ajustes.RutaPerfiles);
 
+        // Se escribe primero en un archivo temporal y después se renombra:
+        // si el juego se cierra a mitad de la escritura, el archivo .save anterior sigue intacto.
         var error = archivoPerfil.Save(rutaArchivoPerfilTemporal);
         if (error != Error.Ok)
         {
@@ -180,17 +180,20 @@ public static class GestorPerfiles
             return false;
         }
 
-        try
+        error = DirAccess.RenameAbsolute(rutaArchivoPerfilTemporal, rutaArchivoPerfilSave);
+        if (error != Error.Ok)
         {
-            File.Move(rutaArchivoPerfilTemporal, rutaArchivoPerfilSave, true);
-            LoggerJuego.Info($"Perfil '{idPerfil}' guardado correctamente.");
-            return true;
-        }
-        catch (Exception e)
-        {
-            LoggerJuego.Error($"Error al guardar el perfil '{idPerfil}': {e.Message}");
+            LoggerJuego.Error($"Error al guardar el perfil '{idPerfil}': {error}");
             return false;
         }
+
+        LoggerJuego.Info($"Perfil '{idPerfil}' guardado correctamente.");
+        return true;
+    }
+
+    private static string ObtenerRutaArchivoPerfil(string idPerfil)
+    {
+        return $"{Ajustes.RutaPerfiles}/{idPerfil}.save";
     }
 
     public static bool EliminarPerfil(Perfil perfil)
@@ -209,23 +212,21 @@ public static class GestorPerfiles
             return false;
         }
 
-        string rutaArchivoPerfil = Path.Combine(Ajustes.RutaPerfiles, idPerfil + ".save");
-        if (!File.Exists(rutaArchivoPerfil))
+        string rutaArchivoPerfil = ObtenerRutaArchivoPerfil(idPerfil);
+        if (!FileAccess.FileExists(rutaArchivoPerfil))
         {
             LoggerJuego.Warn($"No se puede eliminar el perfil '{idPerfil}': archivo no encontrado.");
             return false;
         }
 
-        try
+        var error = DirAccess.RemoveAbsolute(rutaArchivoPerfil);
+        if (error != Error.Ok)
         {
-            File.Delete(rutaArchivoPerfil);
-            LoggerJuego.Info($"Perfil '{idPerfil}' eliminado correctamente.");
-            return true;
-        }
-        catch (Exception e)
-        {
-            LoggerJuego.Error($"Error al eliminar el perfil '{idPerfil}': {e.Message}");
+            LoggerJuego.Error($"Error al eliminar el perfil '{idPerfil}': {error}");
             return false;
         }
+
+        LoggerJuego.Info($"Perfil '{idPerfil}' eliminado correctamente.");
+        return true;
     }
 }

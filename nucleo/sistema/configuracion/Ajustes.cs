@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Godot;
 using Primerjuego2D.nucleo.localizacion;
 using Primerjuego2D.nucleo.utilidades.log;
@@ -26,9 +25,13 @@ public static class Ajustes
 
     public static string NombreJuego { get; } = (string)ProjectSettings.GetSetting("application/config/name");
 
-    public static string RutaMisDocumentos { get; } = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-
-    public static string RutaJuego { get; } = $"{RutaMisDocumentos}/{NombreJuego}";
+    /// <summary>
+    /// Carpeta base de los datos del juego (ajustes, perfiles y logs).
+    /// En Windows, en Documentos, para que el jugador la encuentre fácilmente; en el resto de plataformas, en user://.
+    /// </summary>
+    public static string RutaJuego { get; } = OS.GetName() == "Windows"
+        ? $"{OS.GetSystemDir(OS.SystemDir.Documents)}/{NombreJuego}"
+        : ProjectSettings.GlobalizePath("user://");
 
     public static string RutaLogs { get; } = $"{RutaJuego}/logs";
 
@@ -170,7 +173,7 @@ public static class Ajustes
 
     public static void CargarAjustes()
     {
-        if (!File.Exists(RutaArchivoAjustes))
+        if (!FileAccess.FileExists(RutaArchivoAjustes))
         {
             GuardarAjustesAlGuardarPropiedad = false;
             InicializarValoresPorDefecto();
@@ -264,7 +267,7 @@ public static class Ajustes
 
     private static void Cargar()
     {
-        if (!File.Exists(RutaArchivoAjustes))
+        if (!FileAccess.FileExists(RutaArchivoAjustes))
         {
             LoggerJuego.EscribirLog("ERROR", $"No existe el archivo de ajustes: {RutaArchivoAjustes}", null, "red");
             return;
@@ -278,11 +281,10 @@ public static class Ajustes
 
     public static void Guardar(String clave = null)
     {
-        if (!Directory.Exists(RutaJuego))
-            Directory.CreateDirectory(RutaJuego);
+        // Crea la carpeta si no existe (si ya existe, no hace nada).
+        DirAccess.MakeDirRecursiveAbsolute(RutaJuego);
 
-        string rutaArchivoAjustes = $"{RutaJuego}/{NombreArchivoAjustes}";
-        var error = ArchivoAjustes.Save(rutaArchivoAjustes);
+        var error = ArchivoAjustes.Save(RutaArchivoAjustes);
         if (error != Godot.Error.Ok)
             LoggerJuego.EscribirLog("ERROR", $"No se pudo guardar el archivo de ajustes: {error}", null, "red");
 
